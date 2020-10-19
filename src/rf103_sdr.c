@@ -1,5 +1,5 @@
 /*
- * rf103_test - simple stream test program  for librf103
+ * rf103_sdr - simple stream test program  for librf103
  *
  * Copyright (C) 2020 by Franco Venturi
  *
@@ -24,9 +24,9 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include "rf103.h"
-#include "wavewrite.h"
 
 
 static void count_bytes_callback(uint32_t data_size, uint8_t *data,
@@ -34,15 +34,55 @@ static void count_bytes_callback(uint32_t data_size, uint8_t *data,
 
 static int stop_reception = 0;
 
+void print_usage() {
+  fprintf(stderr,
+    "Usage: rf103_sdr [options]\n\n"
+    "Available options:\n"
+    " -h, --help              show this message\n"
+    " -i, --imagefile         firmware image file\n"
+    " -s, --samplerate        use the specified samplerate\n"
+    " -a, --attenuation       set SDR attenuation (default: off)\n"
+  );
+}
+
+
 int main(int argc, char **argv)
 {
-  if (argc < 2) {
-    fprintf(stderr, "usage: %s <image file> <sample rate>\n", argv[0]);
+  double sample_rate = 0.0;
+  double attenuation = 0;
+  char *imagefile = NULL;
+
+  static struct option long_options[] = {
+    {"help", no_argument, NULL, 'h'},
+    {"imagefile", required_argument, NULL, 'i'},
+    {"samplerate", required_argument, NULL, 's'},
+    {"attenuation", required_argument, NULL, 'a'},
+    { NULL, 0, NULL, 0 }
+  };
+
+  int c;
+
+  while ((c = getopt_long(argc, argv, "hi:f:s:a:", long_options, NULL)) != -1) {
+    switch (c) {
+      case 'h':
+        print_usage();
+        break;
+      case 'i':
+        imagefile = optarg;
+        break;
+      case 's':
+        sample_rate = (double)strtoul(optarg, NULL, 10);
+        break;
+      case 'a':
+        attenuation = (double)strtoul(optarg, NULL, 10);
+        break;
+    }
+  }
+
+  if (imagefile == NULL) {
+    print_usage();
     return -1;
   }
-  char *imagefile = argv[1];
-  double sample_rate = 0.0;
-  sscanf(argv[2], "%lf", &sample_rate);
 
   if (sample_rate <= 0) {
     fprintf(stderr, "ERROR - given samplerate '%f' should be > 0\n", sample_rate);
@@ -59,6 +99,11 @@ int main(int argc, char **argv)
 
   if (rf103_set_sample_rate(rf103, sample_rate) < 0) {
     fprintf(stderr, "ERROR - rf103_set_sample_rate() failed\n");
+    goto DONE;
+  }
+
+  if (rf103_hf_attenuation(rf103, attenuation) < 0) {
+    fprintf(stderr, "ERROR - rf103_hf_attenuation() failed\n");
     goto DONE;
   }
 
