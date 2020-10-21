@@ -2,6 +2,10 @@
 #include <cuda_fp16.h>
 #include <stdio.h>
 
+extern "C" {
+#include "sdr_cuda.h"
+}
+
 __device__ float i_coeffs[] = { 0, 1, 0, -1};
 __device__ float q_coeffs[] = { 1, 0, -1, 0};
 
@@ -25,12 +29,14 @@ void convert_ui16_c(short* input, float* output, uint32_t length) {
     convert_ui16_c_kernel<<<blocks, 512>>>(device_input, device_output);
     cudaMemcpy(output, device_output, sizeof(float) * length * 2, cudaMemcpyDeviceToHost);
 
+    /*
     cudaDeviceSynchronize();
     cudaError_t error = cudaGetLastError();
     if (error != cudaSuccess) {
         fprintf(stderr,"ERROR: %s\n", cudaGetErrorString(error) );
         exit(-1);
     }
+    */
     cudaFree(device_input);
     cudaFree(device_output);
 }
