@@ -264,7 +264,7 @@ usb_device_t *usb_device_open(int index, const char* imagefile,
     libusb_close(dev_handle);
 
     /* wait unitl firmware is ready */
-    usleep(500 * 1000L);
+    usleep(1000 * 1000L);
 
     needs_firmware = 0;
     dev_handle = find_usb_device(index, ctx, &device, &needs_firmware);
