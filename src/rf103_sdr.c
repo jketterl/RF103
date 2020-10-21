@@ -28,6 +28,7 @@
 #include <signal.h>
 
 #include "rf103.h"
+#include "sdr_cuda.h"
 
 
 static void count_bytes_callback(uint32_t data_size, uint8_t *data,
@@ -159,6 +160,10 @@ static void count_bytes_callback(uint32_t data_size,
 {
   if (stop_reception)
     return;
-  fwrite(data, sizeof(uint8_t), data_size, stdout);
+  int samples = data_size / 2;
+  float* output = malloc(sizeof(float) * samples * 2);
+  convert_ui16_c((short*) data, output, samples);
+  fwrite(output, sizeof(float), samples * 2, stdout);
+  free(output);
 }
 

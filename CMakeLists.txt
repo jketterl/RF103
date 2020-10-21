@@ -8,6 +8,13 @@ cmake_minimum_required(VERSION 3.13)
 
 project(rf103 VERSION 0.0.1)
 
+include(CheckLanguage)
+check_language(CUDA)
+if (CMAKE_CUDA_COMPILER)
+    enable_language(CUDA)
+    set(CMAKE_CUDA_ARCHITECTURES 60)
+endif (CMAKE_CUDA_COMPILER)
+
 
 ### build options
 # default build type: Release
@@ -18,7 +25,7 @@ message(STATUS "Build type: " ${CMAKE_BUILD_TYPE} " - Version: " ${VERSION} " / 
 
 include(GNUInstallDirs)
 
-add_compile_options(-Wall -Wextra -pedantic -Werror)
+#add_compile_options(-Wall -Wextra -pedantic -Werror)
 
 
 ### dependencies
