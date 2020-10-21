@@ -25,6 +25,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <signal.h>
 
 #include "rf103.h"
 
@@ -45,12 +46,18 @@ void print_usage() {
   );
 }
 
+static void sighandler(int signum) {
+  fprintf(stderr, "Signal %i caught, exiting!\n", signum);
+  stop_reception = 1;
+}
+
 
 int main(int argc, char **argv)
 {
   double sample_rate = 0.0;
   double attenuation = 0;
   char *imagefile = NULL;
+  struct sigaction sigact;
 
   static struct option long_options[] = {
     {"help", no_argument, NULL, 'h'},
@@ -96,6 +103,14 @@ int main(int argc, char **argv)
     fprintf(stderr, "ERROR - rf103_open() failed\n");
     return -1;
   }
+
+  sigact.sa_handler = sighandler;
+  sigemptyset(&sigact.sa_mask);
+  sigact.sa_flags = 0;
+  sigaction(SIGINT, &sigact, NULL);
+  sigaction(SIGTERM, &sigact, NULL);
+  sigaction(SIGQUIT, &sigact, NULL);
+  sigaction(SIGPIPE, &sigact, NULL);
 
   if (rf103_set_sample_rate(rf103, sample_rate) < 0) {
     fprintf(stderr, "ERROR - rf103_set_sample_rate() failed\n");
