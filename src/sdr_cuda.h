@@ -3,6 +3,7 @@
 #include "fir.h"
 
 typedef struct {
+    short* raw;
     float* input;
     float* output;
     uint32_t buffersize;

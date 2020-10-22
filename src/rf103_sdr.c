@@ -174,6 +174,6 @@ static void count_bytes_callback(uint32_t data_size,
     return;
   int samples = data_size / 2;
   convert_ui16_c((short*) data, conversion_buffer, filter, samples);
-  fwrite(conversion_buffer, sizeof(float), samples * 2, stdout);
+  fwrite(conversion_buffer, sizeof(float), samples, stdout);
 }
 
