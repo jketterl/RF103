@@ -27,11 +27,11 @@ __global__ void fir_decimate_c_kernel(float* input, float* output, float* taps, 
     output[i * 2 + 1] = accq;
 }
 
-void fir_decimate_c_init(fir_decimate_t* filter, uint32_t buffersize) {
+void ddc_init(ddc_t* filter, uint32_t buffersize, uint16_t decimation) {
     filter->buffersize = buffersize;
     filter->taps_length = 121;
     float* taps = (float*) malloc(sizeof(float) * filter->taps_length);
-    firdes_lowpass_f(taps, filter->taps_length, .25, WINDOW_HAMMING);
+    firdes_lowpass_f(taps, filter->taps_length, 0.485/decimation, WINDOW_HAMMING);
 
     cudaMalloc((void**)&filter->taps, sizeof(float) * filter->taps_length);
     cudaMemcpy(filter->taps, taps, sizeof(float) * filter->taps_length, cudaMemcpyHostToDevice);
@@ -43,19 +43,19 @@ void fir_decimate_c_init(fir_decimate_t* filter, uint32_t buffersize) {
     cudaMalloc((void**)&filter->output, sizeof(float) * filter->buffersize);
 }
 
-void fir_decimate_c_close(fir_decimate_t* filter) {
+void ddc_close(ddc_t* filter) {
     cudaFree(filter->raw);
     cudaFree(filter->input);
     cudaFree(filter->output);
     cudaFree(filter->taps);
 }
 
-float* get_fir_decimate_input(fir_decimate_t* filter) {
+float* get_fir_decimate_input(ddc_t* filter) {
     return filter->input + (filter->taps_length * 2);
 }
 
 extern "C"
-void convert_ui16_c(short* input, float* output, fir_decimate_t* filter, uint32_t length) {
+void ddc(short* input, float* output, ddc_t* filter, uint32_t length) {
     cudaMemcpy(filter->raw, input, sizeof(short) * length, cudaMemcpyHostToDevice);
 
     // TODO compensate for incompatible alignment
