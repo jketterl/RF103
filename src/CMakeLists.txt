@@ -32,7 +32,7 @@ if (CMAKE_CUDA_COMPILER)
     add_library(sdr_cuda STATIC
         sdr_cuda.cu
     )
-    add_executable(rf103_sdr rf103_sdr.c)
+    add_executable(rf103_sdr rf103_sdr.c fir.c)
     target_link_libraries(rf103_sdr rf103 sdr_cuda)
 endif (CMAKE_CUDA_COMPILER)
 

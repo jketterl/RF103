@@ -53,6 +53,7 @@ static void sighandler(int signum) {
 }
 
 float* conversion_buffer;
+fir_decimate_t* filter;
 
 int main(int argc, char **argv)
 {
@@ -128,6 +129,9 @@ int main(int argc, char **argv)
   uint32_t frame_size = 512*256;
   conversion_buffer = malloc(sizeof(float) * frame_size * 2);
 
+  filter = malloc(sizeof(fir_decimate_t));
+  fir_decimate_c_init(filter, frame_size * 2);
+
   if (rf103_set_async_params(rf103, frame_size, 0, count_bytes_callback, rf103) < 0) {
     fprintf(stderr, "ERROR - rf103_set_async_params() failed\n");
     goto DONE;
@@ -150,6 +154,9 @@ int main(int argc, char **argv)
     fprintf(stderr, "ERROR - rf103_stop_streaming() failed\n");
     return -1;
   }
+
+  fir_decimate_c_close(filter);
+
   /* done - all good */
   ret_val = 0;
 
@@ -166,7 +173,7 @@ static void count_bytes_callback(uint32_t data_size,
   if (stop_reception)
     return;
   int samples = data_size / 2;
-  convert_ui16_c((short*) data, conversion_buffer, samples);
+  convert_ui16_c((short*) data, conversion_buffer, filter, samples);
   fwrite(conversion_buffer, sizeof(float), samples * 2, stdout);
 }
 
