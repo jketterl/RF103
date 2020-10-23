@@ -42,6 +42,7 @@ void print_usage() {
     "Available options:\n"
     " -h, --help              show this message\n"
     " -i, --imagefile         firmware image file\n"
+    " -f, --frequency         center frequency\n"
     " -s, --samplerate        use the specified samplerate\n"
     " -a, --attenuation       set SDR attenuation (default: off)\n"
   );
@@ -61,18 +62,20 @@ int main(int argc, char **argv)
   double attenuation = 0;
   char *imagefile = NULL;
   struct sigaction sigact;
+  uint32_t frequency = 0;
 
   static struct option long_options[] = {
     {"help", no_argument, NULL, 'h'},
     {"imagefile", required_argument, NULL, 'i'},
     {"samplerate", required_argument, NULL, 's'},
     {"attenuation", required_argument, NULL, 'a'},
+    {"frequency", required_argument, NULL, 'f'},
     { NULL, 0, NULL, 0 }
   };
 
   int c;
 
-  while ((c = getopt_long(argc, argv, "hi:f:s:a:", long_options, NULL)) != -1) {
+  while ((c = getopt_long(argc, argv, "hi:f:s:a:f:", long_options, NULL)) != -1) {
     switch (c) {
       case 'h':
         print_usage();
@@ -86,6 +89,9 @@ int main(int argc, char **argv)
       case 'a':
         attenuation = (double)strtoul(optarg, NULL, 10);
         break;
+      case 'f':
+        frequency = (uint32_t)strtoul(optarg, NULL, 10);
+        break;
     }
   }
 
@@ -96,6 +102,11 @@ int main(int argc, char **argv)
 
   if (sample_rate <= 0) {
     fprintf(stderr, "ERROR - given samplerate '%f' should be > 0\n", sample_rate);
+    return -1;
+  }
+
+  if (frequency <= 0) {
+    fprintf(stderr, "ERROR - given frequency '%i' should be >0\n", frequency);
     return -1;
   }
 
@@ -115,7 +126,7 @@ int main(int argc, char **argv)
   sigaction(SIGQUIT, &sigact, NULL);
   sigaction(SIGPIPE, &sigact, NULL);
 
-  if (rf103_set_sample_rate(rf103, sample_rate) < 0) {
+  if (rf103_set_sample_rate(rf103, 64E6) < 0) {
     fprintf(stderr, "ERROR - rf103_set_sample_rate() failed\n");
     goto DONE;
   }
@@ -130,7 +141,7 @@ int main(int argc, char **argv)
   conversion_buffer = malloc(sizeof(float) * frame_size * 2);
 
   filter = malloc(sizeof(ddc_t));
-  ddc_init(filter, frame_size * 2, 2);
+  ddc_init(filter, frame_size * 2, frequency / 64E6, 64E6 / sample_rate);
 
   if (rf103_set_async_params(rf103, frame_size, 0, count_bytes_callback, rf103) < 0) {
     fprintf(stderr, "ERROR - rf103_set_async_params() failed\n");
@@ -173,7 +184,7 @@ static void count_bytes_callback(uint32_t data_size,
   if (stop_reception)
     return;
   int samples = data_size / 2;
-  ddc((short*) data, conversion_buffer, filter, samples);
-  fwrite(conversion_buffer, sizeof(float), samples, stdout);
+  samples = ddc((short*) data, conversion_buffer, filter, samples);
+  fwrite(conversion_buffer, sizeof(float) * 2, samples, stdout);
 }
 
