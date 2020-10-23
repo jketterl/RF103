@@ -59,10 +59,9 @@ void ddc(short* input, float* output, ddc_t* filter, uint32_t length) {
     cudaMemcpy(filter->raw, input, sizeof(short) * length, cudaMemcpyHostToDevice);
 
     // TODO compensate for incompatible alignment
-    int blocks = length / 512;
-    convert_ui16_c_kernel<<<blocks, 512>>>(filter->raw, get_fir_decimate_input(filter));
-    blocks = length / 20;
-    fir_decimate_c_kernel<<<blocks, 10>>>(filter->input, filter->output, filter->taps, filter->taps_length);
+    int blocks = length / 1024;
+    convert_ui16_c_kernel<<<blocks, 1024>>>(filter->raw, get_fir_decimate_input(filter));
+    fir_decimate_c_kernel<<<blocks, 512>>>(filter->input, filter->output, filter->taps, filter->taps_length);
     // copy unprocessed samples from the end to the beginning of the input buffer
     cudaMemcpy(filter->input + (length * 2), filter->input, sizeof(float) * filter->taps_length * 2, cudaMemcpyDeviceToDevice);
     cudaMemcpy(output, filter->output, sizeof(float) * length, cudaMemcpyDeviceToHost);
