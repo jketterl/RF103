@@ -30,9 +30,9 @@ __global__ void fir_decimate_c_kernel(float* input, float* output, uint16_t* dec
 
 void ddc_init(ddc_t* filter, uint32_t buffersize, float freq_offset, uint16_t decimation) {
     filter->buffersize = buffersize;
-    filter->taps_length = 121;
+    filter->taps_length = 501;
     float* taps = (float*) malloc(sizeof(float) * filter->taps_length);
-    firdes_lowpass_f(taps, filter->taps_length, 0.485/decimation, WINDOW_HAMMING);
+    firdes_lowpass_f(taps, filter->taps_length, 0.5/decimation, WINDOW_HAMMING);
 
     cudaMalloc((void**)&filter->taps, sizeof(float) * filter->taps_length);
     cudaMemcpy(filter->taps, taps, sizeof(float) * filter->taps_length, cudaMemcpyHostToDevice);
