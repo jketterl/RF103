@@ -11,13 +11,13 @@ typedef struct {
     uint16_t taps_length;
     uint16_t decimation;
     uint16_t* decimation_device;
-    float phase_offset;
-    float* phase_offset_device;
-    float angle_per_sample;
-    float* angle_per_sample_device;
+    double phase_offset;
+    double* phase_offset_device;
+    double angle_per_sample;
+    double* angle_per_sample_device;
 } ddc_t;
 
-int ddc(short* input, float* output, ddc_t* filter, uint32_t length);
+uint32_t ddc(short* input, float* output, ddc_t* filter, uint32_t length);
 
 void ddc_init(ddc_t* filter, uint32_t buffersize, float freq_offset, uint16_t decimation);
 void ddc_close(ddc_t* filter);
