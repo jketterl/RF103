@@ -29,8 +29,12 @@ __global__ void fir_decimate_c_kernel(float* input, float* output, uint16_t* dec
 }
 
 void ddc_init(ddc_t* filter, uint32_t buffersize, float freq_offset, uint16_t decimation) {
+    filter->taps_length = 4 * decimation;
+    if (filter->taps_length %2 == 0) filter->taps_length++;
+    filter->taps_length = max(filter->taps_length, 121);
+    fprintf(stderr, "taps length: %i\n", filter->taps_length);
+
     filter->buffersize = buffersize;
-    filter->taps_length = 501;
     float* taps = (float*) malloc(sizeof(float) * filter->taps_length);
     firdes_lowpass_f(taps, filter->taps_length, 0.5/decimation, WINDOW_HAMMING);
 
