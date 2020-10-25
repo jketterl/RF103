@@ -11,6 +11,8 @@ typedef struct {
     uint16_t taps_length;
     uint16_t decimation;
     uint16_t* decimation_device;
+    uint16_t decimation_offset;
+    uint16_t* decimation_offset_device;
     double phase_offset;
     double* phase_offset_device;
     double angle_per_sample;

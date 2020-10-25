@@ -14,9 +14,9 @@ __global__ void convert_ui16_c_kernel(short* input, float* output, double* phase
     output[i * 2 + 1] = cospi(angle) * converted;
 }
 
-__global__ void fir_decimate_c_kernel(float* input, float* output, uint16_t* decimation, float* taps, uint16_t taps_length) {
+__global__ void fir_decimate_c_kernel(float* input, float* output, uint16_t* decimation, uint16_t* decimation_offset, float* taps, uint16_t taps_length) {
     uint32_t i = blockDim.x * blockIdx.x + threadIdx.x;
-    uint32_t dec_i = i * *decimation;
+    uint32_t dec_i = *decimation_offset + i * *decimation;
     float acci = 0;
     float accq = 0;
     for (uint16_t k = 0; k < taps_length; k++) {
@@ -47,6 +47,10 @@ void ddc_init(ddc_t* filter, uint32_t buffersize, float freq_offset, uint16_t de
     cudaMalloc((void**)&filter->decimation_device, sizeof(uint16_t));
     cudaMemcpy(filter->decimation_device, &filter->decimation, sizeof(uint16_t), cudaMemcpyHostToDevice);
 
+    filter->decimation_offset = 0;
+    cudaMalloc((void**)&filter->decimation_offset_device, sizeof(uint16_t));
+    cudaMemcpy(filter->decimation_offset_device, &filter->decimation, sizeof(uint16_t), cudaMemcpyHostToDevice);
+
     filter->phase_offset = 0;
     cudaMalloc((void**)&filter->phase_offset_device, sizeof(double));
     cudaMemcpy(filter->phase_offset_device, &filter->phase_offset, sizeof(double), cudaMemcpyHostToDevice);
@@ -62,6 +66,7 @@ void ddc_init(ddc_t* filter, uint32_t buffersize, float freq_offset, uint16_t de
 
 void ddc_close(ddc_t* filter) {
     cudaFree(filter->decimation_device);
+    cudaFree(filter->decimation_offset_device);
     cudaFree(filter->phase_offset_device);
     cudaFree(filter->angle_per_sample_device);
     cudaFree(filter->raw);
@@ -92,7 +97,11 @@ uint32_t ddc(short* input, float* output, ddc_t* filter, uint32_t length) {
     blocks = out_samples / 512;
     // run an extra block if memory does not line up ideally
     if (out_samples % 512) blocks += 1;
-    fir_decimate_c_kernel<<<blocks, 512>>>(get_fir_decimate_input(filter), filter->output, filter->decimation_device, filter->taps, filter->taps_length);
+    fir_decimate_c_kernel<<<blocks, 512>>>(get_fir_decimate_input(filter), filter->output, filter->decimation_device, filter->decimation_offset_device, filter->taps, filter->taps_length);
+
+    // update decimation offset
+    filter->decimation_offset = (filter->decimation_offset + length) % filter->decimation;
+    cudaMemcpy(filter->decimation_offset_device, &filter->decimation_offset, sizeof(uint16_t), cudaMemcpyHostToDevice);
 
     // copy unprocessed samples from the end to the beginning of the input buffer
     cudaMemcpy(filter->input, filter->input + (length * 2), sizeof(float) * filter->taps_length * 2, cudaMemcpyDeviceToDevice);
