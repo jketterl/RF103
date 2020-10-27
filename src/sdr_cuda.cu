@@ -6,7 +6,7 @@ extern "C" {
 __device__ float i_coeffs[] = { 0, 1, 0, -1};
 __device__ float q_coeffs[] = { 1, 0, -1, 0};
 
-__global__ void convert_ui16_c_kernel(short* input, float* output, double* phase_offset, double* angle_per_sample) {
+__global__ void convert_ui16_c_kernel(int16_t* input, float* output, double* phase_offset, double* angle_per_sample) {
     uint32_t i = blockDim.x * blockIdx.x + threadIdx.x;
     float converted = (float)input[i] / SHRT_MAX;
     double angle = *phase_offset + *angle_per_sample * i;
@@ -59,7 +59,7 @@ void ddc_init(ddc_t* filter, uint32_t buffersize, float freq_offset, uint16_t de
     cudaMalloc((void**)&filter->angle_per_sample_device, sizeof(double));
     cudaMemcpy(filter->angle_per_sample_device, &filter->angle_per_sample, sizeof(double), cudaMemcpyHostToDevice);
 
-    cudaMalloc((void**)&filter->raw, sizeof(short) * filter->buffersize);
+    cudaMalloc((void**)&filter->raw, sizeof(int16_t) * filter->buffersize);
     cudaMalloc((void**)&filter->input, sizeof(float) * 2 * (filter->buffersize + filter->taps_length));
     cudaMalloc((void**)&filter->output, sizeof(float) * filter->buffersize);
 }
@@ -80,8 +80,8 @@ float* get_fir_decimate_input(ddc_t* filter) {
 }
 
 extern "C"
-uint32_t ddc(short* input, float* output, ddc_t* filter, uint32_t length) {
-    cudaMemcpy(filter->raw, input, sizeof(short) * length, cudaMemcpyHostToDevice);
+uint32_t ddc(int16_t* input, float* output, ddc_t* filter, uint32_t length) {
+    cudaMemcpy(filter->raw, input, sizeof(int16_t) * length, cudaMemcpyHostToDevice);
 
     int blocks = length / 1024;
     // run an extra block if memory does not line up ideally

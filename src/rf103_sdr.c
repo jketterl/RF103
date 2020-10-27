@@ -184,7 +184,7 @@ static void count_bytes_callback(uint32_t data_size,
   if (stop_reception)
     return;
   uint32_t samples = data_size / 2;
-  samples = ddc((short*) data, conversion_buffer, filter, samples);
+  samples = ddc((int16_t*) data, conversion_buffer, filter, samples);
   fwrite(conversion_buffer, sizeof(float) * 2, samples, stdout);
 }
 
