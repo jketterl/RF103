@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
-#include "fir.h"
+#include <libcsdr.h>
 
 typedef struct {
     short* raw;

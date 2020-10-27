@@ -32,6 +32,8 @@ include(GNUInstallDirs)
 find_package(PkgConfig)
 pkg_check_modules(LIBUSB REQUIRED libusb-1.0 IMPORTED_TARGET)
 
+pkg_check_modules(LIBCSDR csdr)
+
 
 ### subdirectories
 add_subdirectory(include)

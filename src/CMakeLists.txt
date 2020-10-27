@@ -28,19 +28,24 @@ target_link_libraries(rf103_test rf103)
 add_executable(rf103_stream_test rf103_stream_test.c wavewrite.c)
 target_link_libraries(rf103_stream_test rf103)
 
-if (CMAKE_CUDA_COMPILER)
+if (CMAKE_CUDA_COMPILER AND LIBCSDR_FOUND)
     add_library(sdr_cuda STATIC
         sdr_cuda.cu
     )
-    add_executable(rf103_sdr rf103_sdr.c fir.c)
-    target_link_libraries(rf103_sdr rf103 sdr_cuda)
-endif (CMAKE_CUDA_COMPILER)
+    target_compile_definitions(sdr_cuda PUBLIC USE_FFTW)
+    add_executable(rf103_sdr rf103_sdr.c)
+    target_link_libraries(rf103_sdr rf103 sdr_cuda ${LIBCSDR_LIBRARIES})
+
+    install(TARGETS rf103_sdr
+      DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endif (CMAKE_CUDA_COMPILER AND LIBCSDR_FOUND)
 
 # install
 install(TARGETS rf103
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(TARGETS rf103_test rf103_stream_test rf103_sdr
+install(TARGETS rf103_test rf103_stream_test
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
