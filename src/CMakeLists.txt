@@ -11,6 +11,7 @@ add_library(rf103 SHARED
     usb_device.c
     clock_source.c
     adc.c
+    tuner.c
 )
 set_target_properties(rf103 PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(rf103 PROPERTIES SOVERSION 0)
@@ -27,6 +28,8 @@ add_executable(rf103_test rf103_test.c)
 target_link_libraries(rf103_test rf103)
 add_executable(rf103_stream_test rf103_stream_test.c wavewrite.c)
 target_link_libraries(rf103_stream_test rf103)
+add_executable(rf103_vhf_stream_test rf103_vhf_stream_test.c wavewrite.c)
+target_link_libraries(rf103_vhf_stream_test rf103)
 add_executable(rf103_sdr rf103_sdr.c)
 target_link_libraries(rf103_sdr rf103)
 
@@ -36,6 +39,6 @@ install(TARGETS rf103
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(TARGETS rf103_test rf103_stream_test rf103_sdr
+install(TARGETS rf103_test rf103_stream_test rf103_vhf_stream_test rf103_sdr
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
