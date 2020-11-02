@@ -30,8 +30,6 @@ add_executable(rf103_stream_test rf103_stream_test.c wavewrite.c)
 target_link_libraries(rf103_stream_test rf103)
 add_executable(rf103_vhf_stream_test rf103_vhf_stream_test.c wavewrite.c)
 target_link_libraries(rf103_vhf_stream_test rf103)
-add_executable(rf103_sdr rf103_sdr.c)
-target_link_libraries(rf103_sdr rf103)
 
 if (CMAKE_CUDA_COMPILER AND LIBCSDR_FOUND)
     add_library(sdr_cuda STATIC
@@ -51,6 +49,6 @@ install(TARGETS rf103
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(TARGETS rf103_test rf103_stream_test rf103_vhf_stream_test rf103_sdr
+install(TARGETS rf103_test rf103_stream_test rf103_vhf_stream_test
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
