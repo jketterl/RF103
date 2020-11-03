@@ -1008,8 +1008,9 @@ static uint8_t r82xx_bitrev(uint8_t byte)
 static int tuner_read_value(tuner_t *this, const uint8_t where[3],
                             uint8_t *value) {
   uint8_t reg = where[0];
+  /* as suggested by Hayati, we always need to read registers from 0 to reg */
   int ret = usb_device_i2c_read(this->usb_device, R820T2_ADDR_READ,
-                                reg, this->registers + reg, 1);
+                                0, this->registers, reg + 1);
   if (ret < 0) {
     log_error("usb_device_i2c_read() failed", __func__, __FILE__, __LINE__);
     return -1;
